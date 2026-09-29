@@ -1,6 +1,7 @@
 import {
 	Action,
 	ActionPanel,
+	Color,
 	Icon,
 	List,
 	updateCommandMetadata,
@@ -9,35 +10,40 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getEvents, readEventCache } from "./lib/eds";
 import {
 	type CalendarEvent,
+	eventUrl,
 	formatEventTime,
 	formatTime,
 	groupByDay,
 } from "./lib/events";
 
 function detailMarkdown(event: CalendarEvent): string {
-	return [
-		`# ${event.title}`,
-		event.location ? `**Location:** ${event.location}` : "",
-		`**Calendar:** ${event.calendar}`,
-		event.description,
-	]
+	const meta = [formatEventTime(event), event.location].filter(Boolean).join("  ·  ");
+	return [`# ${event.title}`, `**${meta}**`, event.description]
 		.filter(Boolean)
 		.join("\n\n");
 }
 
 function EventActions({
 	event,
-	showDetail,
+	showingDetail,
 	onToggleDetail,
 	onRefresh,
 }: {
 	event: CalendarEvent;
-	showDetail: boolean;
+	showingDetail: boolean;
 	onToggleDetail: () => void;
 	onRefresh: () => void;
 }) {
+	const url = eventUrl(event);
 	return (
 		<ActionPanel>
+			{url ? (
+				<Action.OpenInBrowser
+					title="Open Event Link"
+					icon={Icon.Globe01}
+					url={url}
+				/>
+			) : null}
 			<Action.CopyToClipboard title="Copy Title" content={event.title} />
 			{event.location ? (
 				<Action.CopyToClipboard
@@ -45,9 +51,11 @@ function EventActions({
 					content={event.location}
 				/>
 			) : null}
+			{url ? <Action.CopyToClipboard title="Copy Link" content={url} /> : null}
 			<Action
-				title={showDetail ? "Hide Details" : "Show Details"}
+				title={showingDetail ? "Hide Details" : "Show Details"}
 				icon={Icon.Eye}
+				shortcut={{ modifiers: ["ctrl"], key: "d" }}
 				onAction={onToggleDetail}
 			/>
 			<Action title="Refresh" icon={Icon.ArrowClockwise} onAction={onRefresh} />
@@ -60,7 +68,7 @@ export default function Agenda() {
 		() => readEventCache()?.events ?? [],
 	);
 	const [isLoading, setIsLoading] = useState(true);
-	const [showDetail, setShowDetail] = useState(false);
+	const [showDetail, setShowDetail] = useState(true);
 
 	const load = useCallback(async (force: boolean) => {
 		setIsLoading(true);
@@ -105,34 +113,86 @@ export default function Agenda() {
 				/>
 			) : (
 				groups.map((group) => (
-					<List.Section key={group.key} title={group.label}>
-						{group.events.map((event) => (
-							<List.Item
-								key={`${event.uid}:${event.startMs}`}
-								icon={{ source: Icon.Calendar, tintColor: event.color }}
-								title={event.title}
-								subtitle={[formatEventTime(event), event.location]
-									.filter(Boolean)
-									.join(" · ")}
-								accessories={[
-									{ text: event.allDay ? "All day" : formatTime(event.startMs) },
-									{ tag: { value: event.calendar, color: event.color } },
-								]}
-								detail={
-									showDetail ? (
-										<List.Item.Detail markdown={detailMarkdown(event)} />
-									) : undefined
-								}
-								actions={
-									<EventActions
-										event={event}
-										showDetail={showDetail}
-										onToggleDetail={() => setShowDetail((value) => !value)}
-										onRefresh={() => load(true)}
-									/>
-								}
-							/>
-						))}
+					<List.Section
+						key={group.key}
+						title={`${group.label} (${group.events.length})`}
+					>
+						{group.events.map((event) => {
+							const url = eventUrl(event);
+							return (
+								<List.Item
+									key={`${event.uid}:${event.startMs}`}
+									icon={{ source: Icon.Calendar, tintColor: event.color }}
+									title={event.title}
+									keywords={[event.location, event.calendar].filter(Boolean)}
+									subtitle={
+										showDetail
+											? undefined
+											: [formatEventTime(event), event.location]
+													.filter(Boolean)
+													.join(" · ")
+									}
+									accessories={[
+										{
+											text: event.allDay
+												? "All day"
+												: formatTime(event.startMs),
+										},
+										{ tag: { value: event.calendar, color: event.color } },
+									]}
+									detail={
+										<List.Item.Detail
+											markdown={detailMarkdown(event)}
+											metadata={
+												<List.Item.Detail.Metadata>
+													<List.Item.Detail.Metadata.Label
+														title="When"
+														text={formatEventTime(event)}
+													/>
+													<List.Item.Detail.Metadata.Label
+														title="Calendar"
+														text={event.calendar}
+													/>
+													{event.status && event.status !== "CONFIRMED" ? (
+														<List.Item.Detail.Metadata.Label
+															title="Status"
+															text={{
+																value: event.status,
+																color:
+																	event.status === "CANCELLED"
+																		? Color.Red
+																		: Color.Orange,
+															}}
+														/>
+													) : null}
+													{event.location ? (
+														<List.Item.Detail.Metadata.Label
+															title="Location"
+															text={event.location}
+														/>
+													) : null}
+													{url ? (
+														<List.Item.Detail.Metadata.Link
+															title="Link"
+															target={url}
+															text={url}
+														/>
+													) : null}
+												</List.Item.Detail.Metadata>
+											}
+										/>
+									}
+									actions={
+										<EventActions
+											event={event}
+											showingDetail={showDetail}
+											onToggleDetail={() => setShowDetail((value) => !value)}
+											onRefresh={() => load(true)}
+										/>
+									}
+								/>
+							);
+						})}
 					</List.Section>
 				))
 			)}

@@ -10,6 +10,7 @@ export interface CalendarEvent {
 	color: string;
 	location: string;
 	description: string;
+	url?: string;
 	allDay: boolean;
 	start: string;
 	end: string;
@@ -71,7 +72,27 @@ export function formatTime(ms: number): string {
 	return new Date(ms).toLocaleTimeString(undefined, {
 		hour: "2-digit",
 		minute: "2-digit",
+		hour12: false,
 	});
+}
+
+const URL_RE = /https?:\/\/[^\s<>"'`)]+/i;
+
+/** First http(s) URL across the given fields, trailing punctuation trimmed. */
+export function extractUrl(
+	...texts: Array<string | undefined>
+): string | undefined {
+	for (const text of texts) {
+		if (!text) continue;
+		const match = URL_RE.exec(text);
+		if (match) return match[0].replace(/[.,;:]+$/, "");
+	}
+	return undefined;
+}
+
+/** Best link for an event: its URL property, then location, then description. */
+export function eventUrl(event: CalendarEvent): string | undefined {
+	return extractUrl(event.url, event.location, event.description);
 }
 
 export function formatEventTime(event: CalendarEvent): string {

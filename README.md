@@ -59,7 +59,10 @@ Preferences live under `providers.calendar-eds.preferences` in
 
 - The helper expands recurrences via EDS (`generate_instances`), so recurring
   events appear per occurrence.
-- Occurrences are grouped by local day; all-day events sort first.
+- Occurrences are grouped by local day; all-day events sort first. The agenda
+  opens with the detail pane visible: event name and time first, description
+  below, links last. Times are 24-hour. The default action opens the event link
+  (URL property, or the first URL found in the location/description).
 - Notifications are sent for timed, non-cancelled events within `notifyLead`
   minutes of their start. Each occurrence is deduplicated by `uid:startMs`
   (persisted in encrypted `LocalStorage`) and dedup keys older than two days

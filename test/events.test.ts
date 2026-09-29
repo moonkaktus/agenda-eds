@@ -10,6 +10,8 @@ import {
 	dayLabel,
 	dedupKey,
 	dueEvents,
+	eventUrl,
+	extractUrl,
 	formatEventTime,
 	formatTime,
 	groupByDay,
@@ -80,6 +82,19 @@ test("dueEvents only emits imminent, non-cancelled timed events", () => {
 
 	assert.deepEqual(dueEvents(sample, standup.startMs - 10 * 60_000, lead), []);
 	assert.deepEqual(dueEvents(sample, standup.startMs + 2 * 60_000, lead), []);
+});
+
+test("formatTime is 24h", () => {
+	assert.match(formatTime(sample[1].startMs), /^\d{2}:\d{2}$/);
+});
+
+test("eventUrl prefers the URL property, then location, then description", () => {
+	const [allDay, standup, recurring, secondRecurrence] = sample;
+	assert.equal(eventUrl(recurring), "https://calendar.example.com/events/1");
+	assert.equal(eventUrl(standup), "https://meet.example.com/standup");
+	assert.equal(eventUrl(allDay), undefined);
+	assert.equal(eventUrl(secondRecurrence), undefined);
+	assert.equal(extractUrl("see https://example.com/a."), "https://example.com/a");
 });
 
 test("dedupKey separates recurring occurrences", () => {

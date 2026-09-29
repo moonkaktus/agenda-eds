@@ -69,6 +69,14 @@ def status_name(comp):
         return "CONFIRMED"
 
 
+def component_url(comp):
+    try:
+        prop = comp.get_first_property(ICalGLib.PropertyKind.URL_PROPERTY)
+        return prop.get_value() if prop else ""
+    except Exception:
+        return ""
+
+
 def component_to_event(comp, start_dt, end_dt, calendar, color):
     all_day = start_dt is not None and (
         comp.get_dtstart() is not None and comp.get_dtstart().is_date()
@@ -88,6 +96,7 @@ def component_to_event(comp, start_dt, end_dt, calendar, color):
         "color": color or FALLBACK_COLOR,
         "location": comp.get_location() or "",
         "description": comp.get_description() or "",
+        "url": component_url(comp) or "",
         "allDay": all_day,
         "start": start_dt.isoformat(),
         "end": end_dt.isoformat(),
