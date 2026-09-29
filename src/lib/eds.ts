@@ -12,10 +12,6 @@ export interface EventCache {
 	events: CalendarEvent[];
 }
 
-export interface EventsResult extends EventCache {
-	fromCache: boolean;
-}
-
 export function readEventCache(): EventCache | undefined {
 	const raw = cache.get(CACHE_KEY);
 	if (!raw) return undefined;
@@ -45,7 +41,7 @@ async function runHelper(): Promise<CalendarEvent[]> {
 
 export async function getEvents(
 	options: { force?: boolean } = {},
-): Promise<EventsResult> {
+): Promise<EventCache> {
 	const prefs = getPreferenceValues<Preferences>();
 	const pollMinutes = Math.max(1, Number(prefs.pollInterval) || 15);
 	const cached = readEventCache();
@@ -55,15 +51,15 @@ export async function getEvents(
 		cached &&
 		Date.now() - cached.fetchedAt < pollMinutes * 60_000
 	) {
-		return { ...cached, fromCache: true };
+		return cached;
 	}
 
 	try {
 		const events = await runHelper();
-		return { events, fetchedAt: Date.now(), fromCache: false };
+		return { events, fetchedAt: Date.now() };
 	} catch {
 		// EDS down or helper broken: fall back to the last known data.
-		if (cached) return { ...cached, fromCache: true };
-		return { events: [], fetchedAt: 0, fromCache: false };
+		if (cached) return cached;
+		return { events: [], fetchedAt: 0 };
 	}
 }

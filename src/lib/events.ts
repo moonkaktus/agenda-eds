@@ -12,8 +12,6 @@ export interface CalendarEvent {
 	description: string;
 	url?: string;
 	allDay: boolean;
-	start: string;
-	end: string;
 	startMs: number;
 	endMs: number;
 	status: string;
@@ -28,11 +26,7 @@ export interface DayGroup {
 function isCalendarEvent(value: unknown): value is CalendarEvent {
 	if (typeof value !== "object" || value === null) return false;
 	const event = value as Record<string, unknown>;
-	return (
-		typeof event.title === "string" &&
-		typeof event.start === "string" &&
-		typeof event.startMs === "number"
-	);
+	return typeof event.title === "string" && typeof event.startMs === "number";
 }
 
 /** Parse the helper's stdout, tolerating malformed data by returning []. */

@@ -78,9 +78,8 @@ def component_url(comp):
 
 
 def component_to_event(comp, start_dt, end_dt, calendar, color):
-    all_day = start_dt is not None and (
-        comp.get_dtstart() is not None and comp.get_dtstart().is_date()
-    )
+    dtstart = comp.get_dtstart()
+    all_day = dtstart is not None and dtstart.is_date()
 
     if start_dt is None:
         start_dt = end_dt

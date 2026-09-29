@@ -1,7 +1,6 @@
 import {
 	Action,
 	ActionPanel,
-	Color,
 	Icon,
 	List,
 	updateCommandMetadata,
@@ -156,13 +155,7 @@ export default function Agenda() {
 													{event.status && event.status !== "CONFIRMED" ? (
 														<List.Item.Detail.Metadata.Label
 															title="Status"
-															text={{
-																value: event.status,
-																color:
-																	event.status === "CANCELLED"
-																		? Color.Red
-																		: Color.Orange,
-															}}
+															text={event.status}
 														/>
 													) : null}
 													{event.location ? (
