@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/vicinaehq/vicinae/refs/heads/main/extra/schemas/extension.json",
+  "name": "calendar-eds",
+  "title": "Calendar (EDS)",
+  "description": "Agenda and notifications from Evolution Data Server",
+  "categories": ["Productivity"],
+  "license": "MIT",
+  "platforms": ["Linux"],
+  "author": "moonkaktus",
+  "icon": "extension_icon.png",
+  "commands": [
+    {
+      "name": "agenda",
+      "title": "Agenda",
+      "description": "Browse upcoming calendar events",
+      "mode": "view"
+    },
+    {
+      "name": "notify-events",
+      "title": "Notify Upcoming Events",
+      "description": "Send desktop notifications for upcoming events",
+      "mode": "no-view",
+      "interval": "1m"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "lookaheadDays",
+      "title": "Days to show",
+      "description": "How far ahead the agenda and notifications look",
+      "type": "dropdown",
+      "required": false,
+      "default": "1",
+      "data": [
+        { "title": "Today", "value": "1" },
+        { "title": "Next 7 days", "value": "7" }
+      ]
+    },
+    {
+      "name": "pollInterval",
+      "title": "EDS refresh (minutes)",
+      "description": "Minimum time between EDS queries; the cache is reused in between",
+      "type": "dropdown",
+      "required": false,
+      "default": "15",
+      "data": [
+        { "title": "5", "value": "5" },
+        { "title": "15", "value": "15" },
+        { "title": "30", "value": "30" }
+      ]
+    },
+    {
+      "name": "notifyLead",
+      "title": "Notify minutes before event",
+      "description": "Send the notification this many minutes before an event starts",
+      "type": "textfield",
+      "required": false,
+      "default": "3"
+    },
+    {
+      "name": "python",
+      "title": "Python interpreter",
+      "description": "Python with pygobject3 and EDS typelibs; point it at the eds-python wrapper from the flake if needed",
+      "type": "textfield",
+      "required": false,
+      "default": "python3"
+    }
+  ],
+  "scripts": {
+    "build": "vici build",
+    "dev": "vici develop",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@vicinae/api": "^0.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "19.1.17",
+    "typescript": "^5.9.2"
+  }
+}

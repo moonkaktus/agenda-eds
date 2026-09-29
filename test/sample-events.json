@@ -1,0 +1,73 @@
+[
+	{
+		"uid": "allday-1",
+		"title": "Company offsite",
+		"calendar": "Work",
+		"color": "#539bf5",
+		"location": "",
+		"description": "",
+		"allDay": true,
+		"start": "2026-09-29T00:00:00+03:00",
+		"end": "2026-09-30T00:00:00+03:00",
+		"startMs": 1790629200000,
+		"endMs": 1790715600000,
+		"status": "CONFIRMED"
+	},
+	{
+		"uid": "timed-1",
+		"title": "Standup",
+		"calendar": "Work",
+		"color": "#539bf5",
+		"location": "Meet",
+		"description": "daily sync",
+		"allDay": false,
+		"start": "2026-09-29T09:30:00+03:00",
+		"end": "2026-09-29T09:45:00+03:00",
+		"startMs": 1790663400000,
+		"endMs": 1790664300000,
+		"status": "CONFIRMED"
+	},
+	{
+		"uid": "recurring-1",
+		"title": "Daily",
+		"calendar": "Work",
+		"color": "#539bf5",
+		"location": "",
+		"description": "",
+		"allDay": false,
+		"start": "2026-09-29T16:00:00+03:00",
+		"end": "2026-09-29T16:30:00+03:00",
+		"startMs": 1790686800000,
+		"endMs": 1790688600000,
+		"status": "CONFIRMED"
+	},
+	{
+		"uid": "recurring-1",
+		"title": "Daily",
+		"calendar": "Work",
+		"color": "#539bf5",
+		"location": "",
+		"description": "",
+		"allDay": false,
+		"start": "2026-09-30T16:00:00+03:00",
+		"end": "2026-09-30T16:30:00+03:00",
+		"startMs": 1790773200000,
+		"endMs": 1790775000000,
+		"status": "CONFIRMED"
+	},
+	{
+		"uid": "cancelled-1",
+		"title": "Cancelled meeting",
+		"calendar": "Work",
+		"color": "#539bf5",
+		"location": "",
+		"description": "",
+		"allDay": false,
+		"start": "2026-09-29T10:00:00+03:00",
+		"end": "2026-09-29T10:30:00+03:00",
+		"startMs": 1790665200000,
+		"endMs": 1790667000000,
+		"status": "CANCELLED"
+	},
+	{ "not": "an event" }
+]

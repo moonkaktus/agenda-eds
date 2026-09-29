@@ -1,0 +1,4 @@
+node_modules/
+result
+result-*
+vicinae-env.d.ts
