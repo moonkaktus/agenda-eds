@@ -15,7 +15,8 @@ src/notify-events.ts   no-view command, runs every minute, sends notifications
 src/lib/eds.ts         spawns the helper, parses JSON, caches on disk
 src/lib/events.ts      pure filtering/grouping/time helpers (unit-tested)
 assets/eds-helper.py   EDS query, prints one JSON array
-test/                  node --test suite for src/lib/events.ts
+assets/notify-event.sh sticky notify-send + click-to-open wrapper
+test/                  node --test suite for src/lib/events.ts and the notifier
 flake.nix              extension package + dev shell (NixOS)
 ```
 
@@ -24,6 +25,7 @@ flake.nix              extension package + dev shell (NixOS)
 - vicinae ≥ 0.29 with the extension host
 - Evolution Data Server running, with at least one enabled calendar
 - A Python that can `import gi` and load `EDataServer`/`ECal` typelibs
+- `notify-send` and `xdg-open` on `PATH` (libnotify), for event notifications
 
 On NixOS, provide that interpreter yourself — the `eds-python` wrapper in the
 home-manager snippet below builds one against the system
@@ -144,8 +146,11 @@ under `providers."@moonkaktus/calendar-eds".preferences` in
   event's title cannot itself be recoloured — the dimming is carried by the
   icon and time accessory.
 - Notifications are sent for timed, non-cancelled events within `notifyLead`
-  minutes of their start. Each occurrence is deduplicated by `uid:startMs`
-  (persisted in encrypted `LocalStorage`) and dedup keys older than two days
-  are pruned.
+  minutes of their start. They go out through `notify-send` rather than
+  vicinae's notification API, which has no actions and uses the server's
+  default timeout: `-u critical -t 0` keeps the notification on screen until
+  dismissed, and clicking it opens the event link (the same URL as the agenda's
+  default action). Each occurrence is deduplicated by `uid:startMs` (persisted
+  in encrypted `LocalStorage`) and dedup keys older than two days are pruned.
 - If EDS or the helper fails, the helper prints `[]`, the agenda shows its
   empty state, and the last cached events are reused.
