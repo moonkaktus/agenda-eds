@@ -14,20 +14,6 @@
 			systems = [ "x86_64-linux" "aarch64-linux" ];
 			forAllSystems = f:
 				nixpkgs.lib.genAttrs systems (system: f (import nixpkgs { inherit system; }));
-
-			# Everything ECal/EDataServer pull in transitively, plus
-			# gobject-introspection for the base libxml2 typelib.
-			typelibPackages = pkgs: with pkgs; [
-				evolution-data-server
-				libical
-				libsoup_3
-				json-glib
-				gnome-online-accounts
-				gcr_4
-				libsecret
-				gobject-introspection
-			];
-			giPath = pkgs: pkgs.lib.makeSearchPath "lib/girepository-1.0" (typelibPackages pkgs);
 		in {
 			packages = forAllSystems (pkgs:
 				let
@@ -51,27 +37,19 @@
 						name = "calendar-eds";
 						inherit src;
 					};
-
-					python = pkgs.python3.withPackages (ps: [ ps.pygobject3 ]);
-
-					# Drop-in `python3` that can import EDataServer/ECal/ICalGLib.
-					# Point the extension's `python` preference at this.
-					eds-python = pkgs.writeShellScriptBin "eds-python" ''
-						export GI_TYPELIB_PATH="${giPath pkgs}''${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
-						exec ${python}/bin/python3 "$@"
-					'';
 				in {
 					default = extension;
-					inherit eds-python;
 				});
 
+			# No EDS/Python here: the helper's interpreter (`eds-python`) is
+			# provided by the host config so it shares the running EDS. Test the
+			# helper with that interpreter on PATH:
+			#   eds-python assets/eds-helper.py --days 1
 			devShells = forAllSystems (pkgs: {
 				default = pkgs.mkShell {
 					packages = with pkgs; [
 						nodejs
-						python3Packages.pygobject3
 					];
-					GI_TYPELIB_PATH = giPath pkgs;
 				};
 			});
 		};

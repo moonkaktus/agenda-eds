@@ -16,7 +16,7 @@ src/lib/eds.ts         spawns the helper, parses JSON, caches on disk
 src/lib/events.ts      pure filtering/grouping/time helpers (unit-tested)
 assets/eds-helper.py   EDS query, prints one JSON array
 test/                  node --test suite for src/lib/events.ts
-flake.nix              extension package, `eds-python` wrapper, dev shell (NixOS)
+flake.nix              extension package + dev shell (NixOS)
 ```
 
 ## Requirements
@@ -25,14 +25,15 @@ flake.nix              extension package, `eds-python` wrapper, dev shell (NixOS
 - Evolution Data Server running, with at least one enabled calendar
 - A Python that can `import gi` and load `EDataServer`/`ECal` typelibs
 
-On NixOS, get that interpreter from the flake:
+On NixOS, provide that interpreter yourself — the `eds-python` wrapper in the
+home-manager snippet below builds one against the system
+`evolution-data-server`, so it shares the running EDS instead of pulling a
+second copy. `nix develop` only supplies nodejs for building/testing; test the
+helper with the host interpreter:
 
 ```sh
-nix build .#eds-python --print-out-paths
-# -> /nix/store/...-eds-python/bin/eds-python
+eds-python assets/eds-helper.py --days 1
 ```
-
-or enter the dev shell (`nix develop`) which has the typelibs wired up.
 
 ## Distribution
 
@@ -50,7 +51,6 @@ The flake exposes:
 
 - `packages.<system>.default` — the extension bundle, built with
   `vicinae.lib.mkVicinaeExtension`
-- `packages.<system>.eds-python` — a `python3` that can import EDS
 
 Add this repo as a flake input and install it through the home-manager
 `programs.vicinae` module:
@@ -66,8 +66,19 @@ agenda-eds = {
 { inputs, pkgs, ... }:
 let
   agenda = inputs.agenda-eds.packages.${pkgs.stdenv.hostPlatform.system};
+  # Python + GI typelibs for the EDS helper, built from the system pkgs so it
+  # reuses the running evolution-data-server.
+  eds-python = pkgs.writeShellScriptBin "eds-python" ''
+    export GI_TYPELIB_PATH="${
+      pkgs.lib.makeSearchPath "lib/girepository-1.0" (with pkgs; [
+        evolution-data-server libical libsoup_3 json-glib
+        gnome-online-accounts gcr_4 libsecret gobject-introspection
+      ])
+    }''${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}"
+    exec ${pkgs.python3.withPackages (ps: [ ps.pygobject3 ])}/bin/python3 "$@"
+  '';
 in {
-  home.packages = [ agenda.eds-python ]; # makes `eds-python` resolve on PATH
+  home.packages = [ eds-python ]; # makes `eds-python` resolve on PATH
   programs.vicinae = {
     enable = true;
     extensions = [ agenda.default ]; # -> ~/.local/share/vicinae/extensions/calendar-eds
