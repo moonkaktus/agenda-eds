@@ -1,6 +1,7 @@
 import {
 	Action,
 	ActionPanel,
+	Color,
 	Icon,
 	List,
 	updateCommandMetadata,
@@ -9,9 +10,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getEvents, readEventCache } from "./lib/eds";
 import {
 	type CalendarEvent,
+	eventState,
 	eventUrl,
 	formatEventTime,
-	formatTime,
 	groupByDay,
 } from "./lib/events";
 
@@ -68,6 +69,7 @@ export default function Agenda() {
 	);
 	const [isLoading, setIsLoading] = useState(true);
 	const [showDetail, setShowDetail] = useState(true);
+	const [now, setNow] = useState(() => Date.now());
 
 	const load = useCallback(async (force: boolean) => {
 		setIsLoading(true);
@@ -79,6 +81,12 @@ export default function Agenda() {
 	useEffect(() => {
 		load(false);
 	}, [load]);
+
+	// Keep the past/current highlighting fresh while the view is open.
+	useEffect(() => {
+		const timer = setInterval(() => setNow(Date.now()), 30_000);
+		return () => clearInterval(timer);
+	}, []);
 
 	useEffect(() => {
 		updateCommandMetadata({
@@ -118,10 +126,37 @@ export default function Agenda() {
 					>
 						{group.events.map((event) => {
 							const url = eventUrl(event);
+							const state = eventState(event, now);
+							const dimmed = state === "past";
+							const accent = state === "current";
+
+							const accessories: List.Item.Accessory[] = [
+								{
+									text: {
+										value: formatEventTime(event),
+										color: dimmed
+											? Color.SecondaryText
+											: accent
+												? Color.Green
+												: Color.PrimaryText,
+									},
+								},
+							];
+							if (accent) {
+								accessories.push({ tag: { value: "Now", color: Color.Green } });
+							}
+
 							return (
 								<List.Item
 									key={`${event.uid}:${event.startMs}`}
-									icon={{ source: Icon.Calendar, tintColor: event.color }}
+									icon={{
+										source: Icon.Calendar,
+										tintColor: dimmed
+											? Color.SecondaryText
+											: accent
+												? Color.Green
+												: event.color,
+									}}
 									title={event.title}
 									keywords={[event.location, event.calendar].filter(Boolean)}
 									subtitle={
@@ -131,14 +166,7 @@ export default function Agenda() {
 													.filter(Boolean)
 													.join(" · ")
 									}
-									accessories={[
-										{
-											text: event.allDay
-												? "All day"
-												: formatTime(event.startMs),
-										},
-										{ tag: { value: event.calendar, color: event.color } },
-									]}
+									accessories={accessories}
 									detail={
 										<List.Item.Detail
 											markdown={detailMarkdown(event)}

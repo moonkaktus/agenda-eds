@@ -10,6 +10,7 @@ import {
 	dayLabel,
 	dedupKey,
 	dueEvents,
+	eventState,
 	eventUrl,
 	extractUrl,
 	formatEventTime,
@@ -95,6 +96,14 @@ test("eventUrl prefers the URL property, then location, then description", () =>
 	assert.equal(eventUrl(allDay), undefined);
 	assert.equal(eventUrl(secondRecurrence), undefined);
 	assert.equal(extractUrl("see https://example.com/a."), "https://example.com/a");
+});
+
+test("eventState classifies past, current and upcoming", () => {
+	const standup = sample.find((event) => event.uid === "timed-1")!;
+	assert.equal(eventState(standup, standup.startMs - 1), "upcoming");
+	assert.equal(eventState(standup, standup.startMs), "current");
+	assert.equal(eventState(standup, standup.endMs - 1), "current");
+	assert.equal(eventState(standup, standup.endMs), "past");
 });
 
 test("dedupKey separates recurring occurrences", () => {

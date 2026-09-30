@@ -122,6 +122,15 @@ export function groupByDay(
 		}));
 }
 
+export type EventState = "past" | "current" | "upcoming";
+
+/** Where `now` sits relative to an event's half-open [start, end) range. */
+export function eventState(event: CalendarEvent, now: number): EventState {
+	if (event.endMs <= now) return "past";
+	if (event.startMs <= now) return "current";
+	return "upcoming";
+}
+
 /** Stable identity for one occurrence, used for notification dedup. */
 export function dedupKey(event: CalendarEvent): string {
 	return `${event.uid}:${event.startMs}`;
