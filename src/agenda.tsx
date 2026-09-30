@@ -128,7 +128,8 @@ export default function Agenda() {
 							const url = eventUrl(event);
 							const state = eventState(event, now);
 							const dimmed = state === "past";
-							const accent = state === "current";
+							// All-day events are "current" the whole day; don't flag them as Now.
+							const accent = state === "current" && !event.allDay;
 
 							const accessories: List.Item.Accessory[] = [
 								{
