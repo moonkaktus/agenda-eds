@@ -5,15 +5,25 @@ import { type CalendarEvent, parseEvents } from "./events";
 
 const execFileAsync = promisify(execFile);
 const cache = new Cache({ namespace: "events" });
-const CACHE_KEY = "events";
 
 export interface EventCache {
 	fetchedAt: number;
 	events: CalendarEvent[];
 }
 
+function lookaheadDays(): number {
+	const prefs = getPreferenceValues<Preferences>();
+	return Math.max(1, Number(prefs.lookaheadDays) || 1);
+}
+
+// The lookahead window is part of the key: changing the preference must not
+// reuse a cache entry fetched for a different range.
+function cacheKey(days: number): string {
+	return `events:days=${days}`;
+}
+
 export function readEventCache(): EventCache | undefined {
-	const raw = cache.get(CACHE_KEY);
+	const raw = cache.get(cacheKey(lookaheadDays()));
 	if (!raw) return undefined;
 	try {
 		const parsed = JSON.parse(raw) as EventCache;
@@ -26,8 +36,8 @@ export function readEventCache(): EventCache | undefined {
 async function runHelper(): Promise<CalendarEvent[]> {
 	const prefs = getPreferenceValues<Preferences>();
 	const helper = `${environment.assetsPath}/eds-helper.py`;
-	const python = (prefs.python || "python3").trim();
-	const days = Math.max(1, Number(prefs.lookaheadDays) || 1);
+	const python = (prefs.python || "eds-python").trim();
+	const days = lookaheadDays();
 
 	const { stdout } = await execFileAsync(python, [helper, "--days", String(days)], {
 		timeout: 30_000,
@@ -35,7 +45,10 @@ async function runHelper(): Promise<CalendarEvent[]> {
 	});
 
 	const events = parseEvents(stdout.trim());
-	cache.set(CACHE_KEY, JSON.stringify({ fetchedAt: Date.now(), events }));
+	cache.set(
+		cacheKey(days),
+		JSON.stringify({ fetchedAt: Date.now(), events }),
+	);
 	return events;
 }
 
