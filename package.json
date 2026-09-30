@@ -60,10 +60,10 @@
     {
       "name": "python",
       "title": "Python interpreter",
-      "description": "Python with pygobject3 and EDS typelibs; point it at the eds-python wrapper from the flake if needed",
+      "description": "Interpreter used to run the EDS helper; defaults to the `eds-python` wrapper from the flake",
       "type": "textfield",
       "required": false,
-      "default": "python3"
+      "default": "eds-python"
     }
   ],
   "scripts": {

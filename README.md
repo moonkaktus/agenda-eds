@@ -52,30 +52,36 @@ The flake exposes:
   `vicinae.lib.mkVicinaeExtension`
 - `packages.<system>.eds-python` — a `python3` that can import EDS
 
-Add this repo as a flake input and install it through the vicinae
-home-manager module:
+Add this repo as a flake input and install it through the home-manager
+`programs.vicinae` module:
 
 ```nix
 # flake.nix
-inputs.agenda-eds.url = "github:moonkaktus/agenda-eds";
+agenda-eds = {
+  url = "github:moonkaktus/agenda-eds";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
 
 # home.nix
 { inputs, pkgs, ... }:
 let
   agenda = inputs.agenda-eds.packages.${pkgs.stdenv.hostPlatform.system};
 in {
+  home.packages = [ agenda.eds-python ]; # makes `eds-python` resolve on PATH
   programs.vicinae = {
     enable = true;
-    extensions = [ agenda.default ];
-    settings.providers."@moonkaktus/calendar-eds".preferences.python =
-      "${agenda.eds-python}/bin/eds-python";
+    extensions = [ agenda.default ]; # -> ~/.local/share/vicinae/extensions/calendar-eds
   };
 }
 ```
 
-That symlinks the bundle into `~/.local/share/vicinae/extensions/calendar-eds`
-and writes the interpreter preference to `~/.config/vicinae/nix.json` (which
-takes precedence over `settings.json`).
+The extension's `python` preference defaults to `eds-python`, so with the
+wrapper on PATH nothing else is needed. Do **not** set
+`programs.vicinae.settings` just for this: upstream home-manager writes that
+option straight to `~/.config/vicinae/settings.json`, replacing any
+GUI-managed settings. (The vicinae flake's own home-manager module merges via
+`nix.json` instead, but it overrides the upstream module and is a bigger
+change.) If you do want Nix to own `settings.json`, put your full config there.
 
 Two things to keep in mind:
 
@@ -105,7 +111,7 @@ npm test          # unit tests for the pure helpers
 | `lookaheadDays` | How many days the agenda and notifications cover          |
 | `pollInterval`  | Minimum minutes between EDS queries (cache TTL)           |
 | `notifyLead`    | Minutes before an event to notify                         |
-| `python`        | Interpreter used for the helper; point it at `eds-python` |
+| `python`        | Interpreter used for the helper (default `eds-python`)    |
 
 A locally installed extension is namespaced by its author, so preferences live
 under `providers."@moonkaktus/calendar-eds".preferences` in
