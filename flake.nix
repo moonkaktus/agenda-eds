@@ -1,9 +1,15 @@
 {
 	description = "vicinae Calendar (EDS) extension";
 
-	inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+	inputs = {
+		nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+		vicinae = {
+			url = "github:vicinaehq/vicinae";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+	};
 
-	outputs = { self, nixpkgs }:
+	outputs = { self, nixpkgs, vicinae }:
 		let
 			systems = [ "x86_64-linux" "aarch64-linux" ];
 			forAllSystems = f:
@@ -25,6 +31,27 @@
 		in {
 			packages = forAllSystems (pkgs:
 				let
+					lib = pkgs.lib;
+					system = pkgs.stdenv.hostPlatform.system;
+
+					src = lib.fileset.toSource {
+						root = ./.;
+						fileset = lib.fileset.unions [
+							./package.json
+							./package-lock.json
+							./tsconfig.json
+							./src
+							./assets
+						];
+					};
+
+					extension = vicinae.lib.${system}.mkVicinaeExtension {
+						pname = "calendar-eds";
+						version = "0.1.0";
+						name = "calendar-eds";
+						inherit src;
+					};
+
 					python = pkgs.python3.withPackages (ps: [ ps.pygobject3 ]);
 
 					# Drop-in `python3` that can import EDataServer/ECal/ICalGLib.
@@ -34,8 +61,8 @@
 						exec ${python}/bin/python3 "$@"
 					'';
 				in {
+					default = extension;
 					inherit eds-python;
-					default = eds-python;
 				});
 
 			devShells = forAllSystems (pkgs: {
