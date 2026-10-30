@@ -32,6 +32,8 @@
 						name = "calendar-eds";
 						version = "0.1.0";
 						inherit src;
+						# npmjs.org is unreachable on this network, so use a
+						# mirror for the lockfile tarballs.
 						npmDeps = pkgs.fetchNpmDeps {
 							inherit src;
 							hash = "sha256-xMyMIwV6Lnh1S/1jT5DuTmwAA+xaOIqpuo0gIVmz3M4=";

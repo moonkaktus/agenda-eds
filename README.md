@@ -53,7 +53,7 @@ personal extension.
 The flake exposes:
 
 - `packages.<system>.default` — the extension bundle, built with
-  `vicinae.lib.mkVicinaeExtension`
+  `buildNpmPackage` against nixpkgs (no vicinae flake input)
 
 Add this repo as a flake input and install it through the home-manager
 `programs.vicinae` module:
@@ -93,9 +93,8 @@ The extension's `python` preference defaults to `eds-python`, so with the
 wrapper on PATH nothing else is needed. Do **not** set
 `programs.vicinae.settings` just for this: upstream home-manager writes that
 option straight to `~/.config/vicinae/settings.json`, replacing any
-GUI-managed settings. (The vicinae flake's own home-manager module merges via
-`nix.json` instead, but it overrides the upstream module and is a bigger
-change.) If you do want Nix to own `settings.json`, put your full config there.
+GUI-managed settings. If you do want Nix to own `settings.json`, put your full
+config there.
 
 Two things to keep in mind:
 
