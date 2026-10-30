@@ -22,7 +22,8 @@ flake.nix              extension package + dev shell (NixOS)
 
 ## Requirements
 
-- vicinae ≥ 0.29 with the extension host
+- vicinae ≥ 0.29.2 with the extension host (`List.Item active`, used to mark
+  the in-progress event; older builds just ignore it)
 - Evolution Data Server running, with at least one enabled calendar
 - A Python that can `import gi` and load `EDataServer`/`ECal` typelibs
 - `notify-send` and `xdg-open` on `PATH` (libnotify), for event notifications
@@ -138,9 +139,9 @@ under `providers."@moonkaktus/calendar-eds".preferences` in
   opens with the detail pane visible: event name and time first, description
   below, links last. Times are 24-hour and each list row shows the full
   start–end range. Past events are dimmed (muted icon/time); the in-progress
-  timed event is highlighted in green with a `Now` tag. The default action
-  opens the event link (URL property, or the first URL found in the
-  location/description).
+  timed event is marked with vicinae's `active` dot under the icon. The
+  default action opens the event link (URL property, or the first URL found in
+  the location/description).
 
   Note: vicinae's `List.Item` only accepts a plain string `title`, so a past
   event's title cannot itself be recoloured — the dimming is carried by the

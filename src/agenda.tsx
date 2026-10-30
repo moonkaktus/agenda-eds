@@ -128,37 +128,28 @@ export default function Agenda() {
 							const url = eventUrl(event);
 							const state = eventState(event, now);
 							const dimmed = state === "past";
-							// All-day events are "current" the whole day; don't flag them as Now.
-							const accent = state === "current" && !event.allDay;
+							// All-day events are "current" the whole day; the active dot is
+							// for the in-progress timed event only.
+							const active = state === "current" && !event.allDay;
 
 							const accessories: List.Item.Accessory[] = [
 								{
 									text: {
 										value: formatEventTime(event),
-										color: dimmed
-											? Color.SecondaryText
-											: accent
-												? Color.Green
-												: Color.PrimaryText,
+										color: dimmed ? Color.SecondaryText : Color.PrimaryText,
 									},
 								},
 							];
-							if (accent) {
-								accessories.push({ tag: { value: "Now", color: Color.Green } });
-							}
 
 							return (
 								<List.Item
 									key={`${event.uid}:${event.startMs}`}
 									icon={{
 										source: Icon.Calendar,
-										tintColor: dimmed
-											? Color.SecondaryText
-											: accent
-												? Color.Green
-												: event.color,
+										tintColor: dimmed ? Color.SecondaryText : event.color,
 									}}
 									title={event.title}
+									active={active}
 									keywords={[event.location, event.calendar].filter(Boolean)}
 									subtitle={
 										showDetail
