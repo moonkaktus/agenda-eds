@@ -3,13 +3,9 @@
 
 	inputs = {
 		nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-		vicinae = {
-			url = "github:vicinaehq/vicinae";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
 	};
 
-	outputs = { self, nixpkgs, vicinae }:
+	outputs = { self, nixpkgs }:
 		let
 			systems = [ "x86_64-linux" "aarch64-linux" ];
 			forAllSystems = f:
@@ -18,7 +14,6 @@
 			packages = forAllSystems (pkgs:
 				let
 					lib = pkgs.lib;
-					system = pkgs.stdenv.hostPlatform.system;
 
 					src = lib.fileset.toSource {
 						root = ./.;
@@ -31,11 +26,19 @@
 						];
 					};
 
-					extension = vicinae.lib.${system}.mkVicinaeExtension {
-						pname = "calendar-eds";
-						version = "0.1.0";
+					# Same recipe as vicinae's mkVicinaeExtension, but without
+					# pulling the vicinae flake in as an input.
+					extension = pkgs.buildNpmPackage {
 						name = "calendar-eds";
+						version = "0.1.0";
 						inherit src;
+						npmDeps = pkgs.fetchNpmDeps {
+							inherit src;
+							hash = "sha256-xMyMIwV6Lnh1S/1jT5DuTmwAA+xaOIqpuo0gIVmz3M4=";
+							npmRegistryOverridesString = ''{"registry.npmjs.org":"https://mirrors.cloud.tencent.com/npm"}'';
+						};
+						buildPhase = "npm run build -- --out=$out";
+						dontNpmInstall = true;
 					};
 				in {
 					default = extension;
